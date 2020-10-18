@@ -39,6 +39,20 @@ function! closer#close()
   let line = getline(ln)
   let indent = matchstr(line, '^\s*')
 
+  " If it's the end of a non-self-closing tag name:
+  if line[-1:] == '>' && line[-2:] != '/>' && match(line, '\v\</[a-zA-Z0-9\.]*\>\s*$') == -1
+    while ln >= line('.') - 100
+      let line = getline(ln)
+      let ln -= 1
+      if match(line, '<[a-zA-Z0-9]*') > -1
+        let closetag = matchlist(line, '\v\<([a-zA-Z0-9\.]*)')[1]
+        " if len(closetag) > 0
+        return "\<Esc>a" .indent . "</" . closetag . ">\<C-O>O\<Esc>a" . indent . "\<Tab>\<Esc>A"
+        " endif
+      endif
+    endwhile
+  endif
+
   let closetag = s:get_closing(line)
   if closetag == '' | return "" | endif
 
